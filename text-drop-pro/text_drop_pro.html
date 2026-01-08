@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>텍스트 드롭 프로그램 PRO</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .main-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            background: #e9ecef;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            background: white;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 텍스트 탭 스타일 */
+        .input-section {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            padding: 8px 16px;
+            background: #e9ecef;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .category-tab:hover {
+            background: #dee2e6;
+        }
+
+        .category-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .category-tab .count {
+            opacity: 0.7;
+            margin-left: 5px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .text-item {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .text-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .text-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .text-item.copied {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .item-label {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 13px;
+        }
+
+        .item-category {
+            font-size: 11px;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .item-text {
+            color: #555;
+            font-size: 14px;
+            word-wrap: break-word;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+        }
+
+        .item-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            background: white;
+            border: 1px solid #ddd;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        /* 엑셀 탭 스타일 */
+        .excel-upload {
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border: 3px dashed #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .excel-upload:hover {
+            border-color: #667eea;
+            background: #e7f1ff;
+        }
+
+        .excel-upload.drag-over {
+            border-color: #667eea;
+            background: #e7f1ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .excel-viewer {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 13px;
+        }
+
+        .excel-table th,
+        .excel-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: left;
+            min-width: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .excel-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .excel-table td:hover {
+            background: #e7f1ff;
+        }
+
+        .excel-table td.copied {
+            background: #d4edda;
+            animation: copyFlash 0.5s;
+        }
+
+        @keyframes copyFlash {
+            0%, 100% { background: #d4edda; }
+            50% { background: #28a745; }
+        }
+
+        .excel-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .excel-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sheet-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sheet-tab {
+            padding: 8px 16px;
+            background: #e9ecef;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sheet-tab:hover {
+            background: #dee2e6;
+        }
+
+        .sheet-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .excel-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .btn-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-clear:hover {
+            background: #c82333;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-controls select {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .filter-info {
+            background: #e7f1ff;
+            border: 1px solid #667eea;
+            color: #667eea;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .highlight {
+            background-color: #ffeb3b;
+            font-weight: bold;
+        }
+
+        .excel-table tr.hidden {
+            display: none;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .edit-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+        }
+
+        .edit-btn:hover {
+            background: #ffb300;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 텍스트 드롭 프로그램 PRO</h1>
+            <p class="subtitle">클릭으로 복사, 드래그로 붙여넣기 | 카테고리 관리 | 엑셀 뷰어</p>
+        </div>
+
+        <div class="main-tabs">
+            <button class="tab-btn active" onclick="switchMainTab('text')">📝 텍스트 관리</button>
+            <button class="tab-btn" onclick="switchMainTab('excel')">📊 엑셀 뷰어</button>
+        </div>
+
+        <!-- 텍스트 관리 탭 -->
+        <div class="tab-content active" id="textTab">
+            <div class="input-section">
+                <div class="input-row">
+                    <div>
+                        <label for="categoryInput">카테고리</label>
+                        <input type="text" id="categoryInput" placeholder="예: 업무, 개인, 고객사">
+                    </div>
+                    <div>
+                        <label for="textLabel">라벨 *</label>
+                        <input type="text" id="textLabel" placeholder="예: 이메일, 전화번호, 주소">
+                    </div>
+                </div>
+                <div>
+                    <label for="textContent">텍스트 내용 *</label>
+                    <textarea id="textContent" placeholder="저장할 텍스트를 입력하세요"></textarea>
+                </div>
+                <button class="btn" onclick="saveText()" style="margin-top: 15px;">💾 저장하기</button>
+            </div>
+
+            <div class="category-tabs" id="categoryTabs"></div>
+
+            <div class="items-grid" id="itemsGrid"></div>
+        </div>
+
+        <!-- 엑셀 뷰어 탭 -->
+        <div class="tab-content" id="excelTab">
+            <div class="excel-upload" id="excelUpload" onclick="document.getElementById('excelFile').click()">
+                <div class="upload-icon">📁</div>
+                <h3>엑셀 파일을 업로드하세요</h3>
+                <p>클릭하거나 파일을 드래그 앤 드롭하세요</p>
+                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display: none;" onchange="handleExcelFile(event)">
+            </div>
+
+            <div id="excelContent" style="display: none;">
+                <div class="excel-info">
+                    <div class="excel-name" id="excelFileName"></div>
+                    <button class="btn btn-secondary" onclick="clearExcel()">🗑️ 파일 제거</button>
+                </div>
+                
+                <div class="excel-controls">
+                    <div class="search-box">
+                        <input type="text" id="excelSearch" placeholder="🔍 검색어 입력..." oninput="searchExcel()">
+                        <button class="btn-clear" onclick="clearSearch()" style="display: none;">×</button>
+                    </div>
+                    <div class="filter-controls">
+                        <select id="columnFilter" onchange="applyColumnFilter()">
+                            <option value="">전체 컬럼</option>
+                        </select>
+                        <button class="btn" onclick="resetFilters()">🔄 필터 초기화</button>
+                    </div>
+                </div>
+                
+                <div class="sheet-tabs" id="sheetTabs"></div>
+                <div class="filter-info" id="filterInfo" style="display: none;"></div>
+                <div class="excel-viewer" id="excelViewer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수정 모달 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>텍스트 수정</h2>
+            <div style="margin-bottom: 15px;">
+                <label for="editCategory">카테고리</label>
+                <input type="text" id="editCategory">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label for="editLabel">라벨</label>
+                <input type="text" id="editLabel">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label for="editContent">내용</label>
+                <textarea id="editContent" style="min-height: 100px;"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="saveEdit()">저장</button>
+                <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-message" id="successMessage"></div>
+
+    <script>
+        let savedTexts = JSON.parse(localStorage.getItem('savedTexts')) || [];
+        let currentCategory = 'all';
+        let currentSheet = 0;
+        let excelData = null;
+        let editingId = null;
+        let currentSheetData = null;
+        let currentSearchTerm = '';
+        let currentColumnFilter = '';
+
+        window.onload = function() {
+            renderCategories();
+            renderItems();
+        };
+
+        // 메인 탭 전환
+        function switchMainTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        // 텍스트 저장
+        function saveText() {
+            const category = document.getElementById('categoryInput').value.trim() || '기본';
+            const label = document.getElementById('textLabel').value.trim();
+            const content = document.getElementById('textContent').value.trim();
+
+            if (!label || !content) {
+                showMessage('라벨과 내용을 모두 입력해주세요!', false);
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(),
+                category: category,
+                label: label,
+                content: content
+            };
+
+            savedTexts.push(newItem);
+            localStorage.setItem('savedTexts', JSON.stringify(savedTexts));
+
+            document.getElementById('categoryInput').value = '';
+            document.getElementById('textLabel').value = '';
+            document.getElementById('textContent').value = '';
+
+            showMessage('✅ 저장되었습니다!');
+            renderCategories();
+            renderItems();
+        }
+
+        // 카테고리 렌더링
+        function renderCategories() {
+            const categories = {};
+            savedTexts.forEach(item => {
+                categories[item.category] = (categories[item.category] || 0) + 1;
+            });
+
+            const tabsHtml = `
+                <div class="category-tab ${currentCategory === 'all' ? 'active' : ''}" onclick="filterByCategory('all')">
+                    전체 <span class="count">(${savedTexts.length})</span>
+                </div>
+                ${Object.keys(categories).map(cat => `
+                    <div class="category-tab ${currentCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">
+                        ${cat} <span class="count">(${categories[cat]})</span>
+                    </div>
+                `).join('')}
+            `;
+
+            document.getElementById('categoryTabs').innerHTML = tabsHtml;
+        }
+
+        // 카테고리 필터
+        function filterByCategory(category) {
+            currentCategory = category;
+            renderCategories();
+            renderItems();
+        }
+
+        // 아이템 렌더링
+        function renderItems() {
+            const grid = document.getElementById('itemsGrid');
+            const filtered = currentCategory === 'all' 
+                ? savedTexts 
+                : savedTexts.filter(item => item.category === currentCategory);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <p>저장된 텍스트가 없습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="text-item" 
+                     draggable="true" 
+                     ondragstart="dragStart(event, ${item.id})" 
+                     ondragend="dragEnd(event)"
+                     onclick="copyToClipboard(event, ${item.id})"
+                     data-id="${item.id}">
+                    <div class="item-actions">
+                        <button class="action-btn edit-btn" onclick="openEditModal(event, ${item.id})" title="수정">✏️</button>
+                        <button class="action-btn delete-btn" onclick="deleteItem(event, ${item.id})" title="삭제">×</button>
+                    </div>
+                    <div class="item-header">
+                        <div class="item-label">${item.label}</div>
+                        <div class="item-category">${item.category}</div>
+                    </div>
+                    <div class="item-text">${item.content}</div>
+                </div>
+            `).join('');
+        }
+
+        // 클릭으로 복사
+        function copyToClipboard(event, id) {
+            // 버튼 클릭은 무시
+            if (event.target.closest('.action-btn')) return;
+
+            const item = savedTexts.find(i => i.id === id);
+            const element = event.currentTarget;
+
+            navigator.clipboard.writeText(item.content).then(() => {
+                element.classList.add('copied');
+                showMessage('📋 복사되었습니다!');
+                
+                setTimeout(() => {
+                    element.classList.remove('copied');
+                }, 500);
+            });
+        }
+
+        // 드래그 시작
+        function dragStart(event, id) {
+            const item = savedTexts.find(i => i.id === id);
+            event.dataTransfer.effectAllowed = 'copy';
+            event.dataTransfer.setData('text/plain', item.content);
+            event.currentTarget.classList.add('dragging');
+        }
+
+        // 드래그 종료
+        function dragEnd(event) {
+            event.currentTarget.classList.remove('dragging');
+        }
+
+        // 수정 모달 열기
+        function openEditModal(event, id) {
+            event.stopPropagation();
+            const item = savedTexts.find(i => i.id === id);
+            
+            editingId = id;
+            document.getElementById('editCategory').value = item.category;
+            document.getElementById('editLabel').value = item.label;
+            document.getElementById('editContent').value = item.content;
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // 수정 저장
+        function saveEdit() {
+            const category = document.getElementById('editCategory').value.trim() || '기본';
+            const label = document.getElementById('editLabel').value.trim();
+            const content = document.getElementById('editContent').value.trim();
+
+            if (!label || !content) {
+                showMessage('라벨과 내용을 모두 입력해주세요!', false);
+                return;
+            }
+
+            const index = savedTexts.findIndex(i => i.id === editingId);
+            savedTexts[index] = {
+                ...savedTexts[index],
+                category: category,
+                label: label,
+                content: content
+            };
+
+            localStorage.setItem('savedTexts', JSON.stringify(savedTexts));
+            closeEditModal();
+            showMessage('✅ 수정되었습니다!');
+            renderCategories();
+            renderItems();
+        }
+
+        // 수정 모달 닫기
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            editingId = null;
+        }
+
+        // 삭제
+        function deleteItem(event, id) {
+            event.stopPropagation();
+            if (confirm('이 텍스트를 삭제하시겠습니까?')) {
+                savedTexts = savedTexts.filter(item => item.id !== id);
+                localStorage.setItem('savedTexts', JSON.stringify(savedTexts));
+                renderCategories();
+                renderItems();
+                showMessage('🗑️ 삭제되었습니다!');
+            }
+        }
+
+        // 엑셀 파일 처리
+        function handleExcelFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                excelData = workbook;
+                document.getElementById('excelFileName').textContent = file.name;
+                document.getElementById('excelUpload').style.display = 'none';
+                document.getElementById('excelContent').style.display = 'block';
+                
+                renderSheetTabs();
+                renderSheet(0);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 시트 탭 렌더링
+        function renderSheetTabs() {
+            const tabs = excelData.SheetNames.map((name, index) => `
+                <div class="sheet-tab ${index === currentSheet ? 'active' : ''}" 
+                     onclick="renderSheet(${index})">
+                    ${name}
+                </div>
+            `).join('');
+            
+            document.getElementById('sheetTabs').innerHTML = tabs;
+        }
+
+        // 시트 렌더링
+        function renderSheet(sheetIndex) {
+            currentSheet = sheetIndex;
+            currentSearchTerm = '';
+            currentColumnFilter = '';
+            document.getElementById('excelSearch').value = '';
+            
+            renderSheetTabs();
+            
+            const sheetName = excelData.SheetNames[sheetIndex];
+            const worksheet = excelData.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+            
+            if (jsonData.length === 0) {
+                document.getElementById('excelViewer').innerHTML = '<p>시트가 비어있습니다.</p>';
+                return;
+            }
+
+            currentSheetData = jsonData;
+            updateColumnFilter();
+            renderTable();
+        }
+
+        // 컬럼 필터 옵션 업데이트
+        function updateColumnFilter() {
+            const headers = currentSheetData[0];
+            const filterSelect = document.getElementById('columnFilter');
+            
+            filterSelect.innerHTML = '<option value="">전체 컬럼</option>';
+            headers.forEach((header, index) => {
+                filterSelect.innerHTML += `<option value="${index}">${header}</option>`;
+            });
+        }
+
+        // 테이블 렌더링
+        function renderTable() {
+            const headers = currentSheetData[0];
+            const rows = currentSheetData.slice(1);
+
+            let tableHtml = '<table class="excel-table"><thead><tr>';
+            headers.forEach(header => {
+                tableHtml += `<th>${escapeHtml(header)}</th>`;
+            });
+            tableHtml += '</tr></thead><tbody>';
+
+            let visibleCount = 0;
+            rows.forEach((row, rowIndex) => {
+                const shouldShow = filterRow(row);
+                const rowClass = shouldShow ? '' : 'hidden';
+                if (shouldShow) visibleCount++;
+
+                tableHtml += `<tr class="${rowClass}">`;
+                headers.forEach((_, colIndex) => {
+                    const cellValue = String(row[colIndex] || '');
+                    const displayValue = highlightText(cellValue);
+                    const escapedValue = cellValue.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+                    tableHtml += `<td draggable="true" 
+                                      data-value="${escapeHtml(cellValue)}"
+                                      ondragstart="dragCellNew(event)"
+                                      ondragend="dragEndCell(event)"
+                                      onclick="copyCellNew(event)">${displayValue}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+
+            tableHtml += '</tbody></table>';
+            document.getElementById('excelViewer').innerHTML = tableHtml;
+
+            // 필터 정보 표시
+            updateFilterInfo(visibleCount, rows.length);
+        }
+
+        // 행 필터링 로직
+        function filterRow(row) {
+            // 컬럼 필터 체크
+            if (currentColumnFilter !== '') {
+                const colIndex = parseInt(currentColumnFilter);
+                const cellValue = String(row[colIndex] || '').toLowerCase();
+                if (!cellValue.includes(currentSearchTerm.toLowerCase())) {
+                    return false;
+                }
+            } else if (currentSearchTerm) {
+                // 전체 검색
+                const rowText = row.map(cell => String(cell || '').toLowerCase()).join(' ');
+                if (!rowText.includes(currentSearchTerm.toLowerCase())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // 텍스트 하이라이트
+        function highlightText(text) {
+            if (!currentSearchTerm || !text) return text;
+            
+            const regex = new RegExp(`(${escapeRegex(currentSearchTerm)})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // HTML 이스케이프
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/'/g, '&#39;');
+        }
+
+        // 정규식 이스케이프
+        function escapeRegex(text) {
+            return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 검색 실행
+        function searchExcel() {
+            currentSearchTerm = document.getElementById('excelSearch').value;
+            const clearBtn = document.querySelector('.btn-clear');
+            
+            if (currentSearchTerm) {
+                clearBtn.style.display = 'flex';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
+            if (currentSheetData) {
+                renderTable();
+            }
+        }
+
+        // 검색 초기화
+        function clearSearch() {
+            document.getElementById('excelSearch').value = '';
+            currentSearchTerm = '';
+            document.querySelector('.btn-clear').style.display = 'none';
+            if (currentSheetData) {
+                renderTable();
+            }
+        }
+
+        // 컬럼 필터 적용
+        function applyColumnFilter() {
+            currentColumnFilter = document.getElementById('columnFilter').value;
+            if (currentSheetData) {
+                renderTable();
+            }
+        }
+
+        // 필터 초기화
+        function resetFilters() {
+            document.getElementById('excelSearch').value = '';
+            document.getElementById('columnFilter').value = '';
+            currentSearchTerm = '';
+            currentColumnFilter = '';
+            document.querySelector('.btn-clear').style.display = 'none';
+            if (currentSheetData) {
+                renderTable();
+            }
+        }
+
+        // 필터 정보 업데이트
+        function updateFilterInfo(visibleCount, totalCount) {
+            const filterInfo = document.getElementById('filterInfo');
+            
+            if (currentSearchTerm || currentColumnFilter) {
+                filterInfo.style.display = 'block';
+                filterInfo.textContent = `📊 ${visibleCount} / ${totalCount} 행 표시`;
+            } else {
+                filterInfo.style.display = 'none';
+            }
+        }
+
+        // 셀 드래그 (새 방식)
+        function dragCellNew(event) {
+            const value = event.currentTarget.getAttribute('data-value');
+            event.dataTransfer.effectAllowed = 'copy';
+            event.dataTransfer.setData('text/plain', value);
+        }
+
+        function dragEndCell(event) {
+            // 드래그 종료 시 처리
+        }
+
+        // 셀 클릭 복사 (새 방식)
+        function copyCellNew(event) {
+            const value = event.currentTarget.getAttribute('data-value');
+            if (!value) return;
+            
+            navigator.clipboard.writeText(value).then(() => {
+                event.currentTarget.classList.add('copied');
+                showMessage('📋 복사되었습니다!');
+                
+                setTimeout(() => {
+                    event.currentTarget.classList.remove('copied');
+                }, 500);
+            });
+        }
+
+        // 셀 드래그 (하위 호환)
+        function dragCell(event, value) {
+            event.dataTransfer.effectAllowed = 'copy';
+            event.dataTransfer.setData('text/plain', value);
+        }
+
+        // 셀 클릭 복사 (하위 호환)
+        function copyCell(event, value) {
+            if (!value) return;
+            
+            navigator.clipboard.writeText(value).then(() => {
+                event.currentTarget.classList.add('copied');
+                showMessage('📋 복사되었습니다!');
+                
+                setTimeout(() => {
+                    event.currentTarget.classList.remove('copied');
+                }, 500);
+            });
+        }
+
+        // 엑셀 파일 제거
+        function clearExcel() {
+            if (confirm('엑셀 파일을 제거하시겠습니까?')) {
+                excelData = null;
+                currentSheet = 0;
+                currentSheetData = null;
+                currentSearchTerm = '';
+                currentColumnFilter = '';
+                document.getElementById('excelFile').value = '';
+                document.getElementById('excelSearch').value = '';
+                document.getElementById('excelUpload').style.display = 'block';
+                document.getElementById('excelContent').style.display = 'none';
+            }
+        }
+
+        // 드래그 앤 드롭 (엑셀 업로드)
+        const uploadArea = document.getElementById('excelUpload');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                document.getElementById('excelFile').files = e.dataTransfer.files;
+                handleExcelFile({ target: { files: [file] } });
+            }
+        });
+
+        // 메시지 표시
+        function showMessage(message, success = true) {
+            const msgElement = document.getElementById('successMessage');
+            msgElement.textContent = message;
+            msgElement.style.background = success ? '#28a745' : '#dc3545';
+            msgElement.classList.add('show');
+            
+            setTimeout(() => {
+                msgElement.classList.remove('show');
+            }, 2000);
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                if (document.getElementById('textTab').classList.contains('active')) {
+                    saveText();
+                }
+            }
+            if (e.key === 'Escape') {
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html>
